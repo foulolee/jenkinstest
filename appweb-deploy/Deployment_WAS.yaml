@@ -1,0 +1,30 @@
+############################################
+# 2. WAS (Tomcat)
+############################################
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: was-app
+  namespace: app-namespace
+  labels:
+    app: was-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: was-app
+  template:
+    metadata:
+      labels:
+        app: was-app
+    spec:
+      imagePullSecrets:
+        - name: appweb-regcred
+      containers:
+        - name: tomcat
+          image: 211.34.229.48:5000/appweb:20251211105014
+          ports:
+            - containerPort: 8080
+          env:
+            - name: TZ
+              value: "Asia/Seoul"
