@@ -26,5 +26,5 @@
   <description>
      Welcome to Tomcat
   </description>
-
+  <distributable/>
 </web-app>
