@@ -147,11 +147,9 @@
     <Channel className="org.apache.catalina.tribes.group.GroupChannel">
 
       <!-- 멤버 발견: 멀티캐스트 -->
-      <Membership className="org.apache.catalina.tribes.membership.McastService"
-                  address="228.0.0.4"
-                  port="45564"
-                  frequency="500"
-                  dropTime="3000" />
+      <Membership className="org.apache.catalina.tribes.membership.cloud.CloudMembershipService"
+            membershipProviderClassName="kubernetes" />
+
 
       <!-- 수신(각 노드가 실제로 받는 포트) -->
       <Receiver className="org.apache.catalina.tribes.transport.nio.NioReceiver"
