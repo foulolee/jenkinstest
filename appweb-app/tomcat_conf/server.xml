@@ -130,46 +130,45 @@
     -->
   <Engine name="Catalina" defaultHost="localhost" jvmRoute="tomcat">
 
-  <Cluster className="org.apache.catalina.ha.tcp.SimpleTcpCluster"
-           channelSendOptions="8">
+        <Cluster className="org.apache.catalina.ha.tcp.SimpleTcpCluster"
+                 channelSendOptions="8">
 
-    <!-- 세션 복제(모든 노드에 복제) -->
-    <Manager className="org.apache.catalina.ha.session.DeltaManager"
-             expireSessionsOnShutdown="false"
-             notifyListenersOnReplication="true" />
+          <Manager className="org.apache.catalina.ha.session.DeltaManager"
+                   expireSessionsOnShutdown="false"
+                   notifyListenersOnReplication="true"/>
 
-    <!-- 복제 트리거(요청 처리 후 세션 복제) -->
-    <Valve className="org.apache.catalina.ha.tcp.ReplicationValve" />
+          <Channel className="org.apache.catalina.tribes.group.GroupChannel">
+            <Membership className="org.apache.catalina.tribes.membership.McastService"
+                        address="228.0.0.4"
+                        port="45564"
+                        frequency="500"
+                        dropTime="3000"/>
+            <Receiver className="org.apache.catalina.tribes.transport.nio.NioReceiver"
+                      address="auto"
+                      port="4000"
+                      autoBind="100"
+                      selectorTimeout="5000"
+                      maxThreads="6"/>
 
-    <!-- 세션 이벤트 리스너 -->
-    <ClusterListener className="org.apache.catalina.ha.session.ClusterSessionListener" />
+            <Sender className="org.apache.catalina.tribes.transport.ReplicationTransmitter">
+              <Transport className="org.apache.catalina.tribes.transport.nio.PooledParallelSender"/>
+            </Sender>
+            <Interceptor className="org.apache.catalina.tribes.group.interceptors.TcpFailureDetector"/>
+            <Interceptor className="org.apache.catalina.tribes.group.interceptors.MessageDispatchInterceptor"/>
+          </Channel>
 
-    <Channel className="org.apache.catalina.tribes.group.GroupChannel">
+          <Valve className="org.apache.catalina.ha.tcp.ReplicationValve"
+                 filter=""/>
+          <Valve className="org.apache.catalina.ha.session.JvmRouteBinderValve"/>
 
-      <!-- 멤버 발견: 멀티캐스트 -->
-      <Membership className="org.apache.catalina.tribes.membership.cloud.CloudMembershipService"
-            membershipProviderClassName="kubernetes" />
+          <Deployer className="org.apache.catalina.ha.deploy.FarmWarDeployer"
+                    tempDir="/tmp/war-temp/"
+                    deployDir="/tmp/war-deploy/"
+                    watchDir="/tmp/war-listen/"
+                    watchEnabled="false"/>
 
-
-      <!-- 수신(각 노드가 실제로 받는 포트) -->
-      <Receiver className="org.apache.catalina.tribes.transport.nio.NioReceiver"
-                address="auto"
-                port="4000"
-                autoBind="100"
-                selectorTimeout="5000"
-                maxThreads="6" />
-
-      <!-- 송신 -->
-      <Sender className="org.apache.catalina.tribes.transport.ReplicationTransmitter">
-        <Transport className="org.apache.catalina.tribes.transport.nio.PooledParallelSender" />
-      </Sender>
-
-      <!-- 안정성 인터셉터 -->
-      <Interceptor className="org.apache.catalina.tribes.group.interceptors.TcpFailureDetector" />
-      <Interceptor className="org.apache.catalina.tribes.group.interceptors.MessageDispatchInterceptor" />
-
-    </Channel>
-  </Cluster>
+          <ClusterListener className="org.apache.catalina.ha.session.ClusterSessionListener"/>
+        </Cluster>
 
       <!--For clustering, please take a look at documentation at:
           /docs/cluster-howto.html  (simple how to)
