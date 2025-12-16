@@ -128,65 +128,50 @@
    <!-- 
     <Engine name="Catalina" defaultHost="localhost">
     -->
-    
-    <Engine name="Catalina" defaultHost="localhost" jvmRoute="tomcat">
+  <Engine name="Catalina" defaultHost="localhost" jvmRoute="tomcat">
+
   <Cluster className="org.apache.catalina.ha.tcp.SimpleTcpCluster"
            channelSendOptions="8">
 
-    <!-- 세션 복제 방식: DeltaManager(전체 노드 복제) -->
+    <!-- 세션 복제(모든 노드에 복제) -->
     <Manager className="org.apache.catalina.ha.session.DeltaManager"
              expireSessionsOnShutdown="false"
-             notifyListenersOnReplication="true"/>
+             notifyListenersOnReplication="true" />
 
-    <!-- 세션 복제 트래픽 필터/최적화 -->
-    <Valve className="org.apache.catalina.ha.tcp.ReplicationValve"
-           filter=""/>
+    <!-- 복제 트리거(요청 처리 후 세션 복제) -->
+    <Valve className="org.apache.catalina.ha.tcp.ReplicationValve" />
 
-    <ClusterListener className="org.apache.catalina.ha.session.ClusterSessionListener"/>
+    <!-- 세션 이벤트 리스너 -->
+    <ClusterListener className="org.apache.catalina.ha.session.ClusterSessionListener" />
 
-    <!-- 통신 채널 -->
     <Channel className="org.apache.catalina.tribes.group.GroupChannel">
 
-      <!-- 수신 설정 -->
+      <!-- 멤버 발견: 멀티캐스트 -->
+      <Membership className="org.apache.catalina.tribes.membership.McastService"
+                  address="228.0.0.4"
+                  port="45564"
+                  frequency="500"
+                  dropTime="3000" />
+
+      <!-- 수신(각 노드가 실제로 받는 포트) -->
       <Receiver className="org.apache.catalina.tribes.transport.nio.NioReceiver"
                 address="auto"
                 port="4000"
                 autoBind="100"
                 selectorTimeout="5000"
-                maxThreads="6"/>
+                maxThreads="6" />
 
-      <!-- 송신 설정 -->
+      <!-- 송신 -->
       <Sender className="org.apache.catalina.tribes.transport.ReplicationTransmitter">
-        <Transport className="org.apache.catalina.tribes.transport.nio.PooledParallelSender"/>
+        <Transport className="org.apache.catalina.tribes.transport.nio.PooledParallelSender" />
       </Sender>
 
-      <!-- 멀티캐스트 대신: 정적 멤버십(아래 3개 멤버를 실제 Pod IP/이름으로 맞춰야 함) -->
-      <Membership className="org.apache.catalina.tribes.membership.StaticMembershipService">
-        <!-- 예: headless service + StatefulSet이면 이런 식으로 고정됨 -->
-        <Member className="org.apache.catalina.tribes.membership.StaticMember"
-                host="was-app-0.was-app-headless.app-namespace.svc.cluster.local"
-                port="4000" uniqueId="{0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1}"/>
-        <Member className="org.apache.catalina.tribes.membership.StaticMember"
-                host="was-app-1.was-app-headless.app-namespace.svc.cluster.local"
-                port="4000" uniqueId="{0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,2}"/>
-        <Member className="org.apache.catalina.tribes.membership.StaticMember"
-                host="was-app-2.was-app-headless.app-namespace.svc.cluster.local"
-                port="4000" uniqueId="{0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,3}"/>
-      </Membership>
+      <!-- 안정성 인터셉터 -->
+      <Interceptor className="org.apache.catalina.tribes.group.interceptors.TcpFailureDetector" />
+      <Interceptor className="org.apache.catalina.tribes.group.interceptors.MessageDispatchInterceptor" />
 
-      <!-- 메시지 인터셉터 -->
-      <Interceptor className="org.apache.catalina.tribes.group.interceptors.TcpFailureDetector"/>
-      <Interceptor className="org.apache.catalina.tribes.group.interceptors.MessageDispatchInterceptor"/>
     </Channel>
-
   </Cluster>
-
-      <Membership className="org.apache.catalina.tribes.membership.McastService"
-            address="228.0.0.4"
-            port="45564"
-            frequency="500"
-            dropTime="3000"/>
-
 
       <!--For clustering, please take a look at documentation at:
           /docs/cluster-howto.html  (simple how to)
