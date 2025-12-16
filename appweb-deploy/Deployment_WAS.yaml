@@ -22,7 +22,7 @@ spec:
         - name: appweb-regcred
       containers:
         - name: tomcat
-          image: 211.34.229.48:5000/basic11:20251216-1245
+          image: 211.34.229.48:5000/basic11:20251216-1246
           ports:
             - containerPort: 8080
             - containerPort: 4000
