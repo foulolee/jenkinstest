@@ -25,6 +25,7 @@ spec:
           image: 211.34.229.48:5000/basic11:20251216-1245
           ports:
             - containerPort: 8080
+            - containerPort: 4000
           env:
             - name: TZ
               value: "Asia/Seoul"
