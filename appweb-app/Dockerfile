@@ -7,11 +7,12 @@ COPY tomcat_conf/* /usr/local/tomcat/conf/
 
 # 3) 기본 webapps 삭제 후 새 WAR 배포
 RUN rm -rf /usr/local/tomcat/webapps/*
-COPY ROOT /usr/local/tomcat/webapps/
+COPY target/ROOT.war /usr/local/tomcat/webapps/ROOT.war
 
 # 4) 포트 오픈
 EXPOSE 8080
 
 # 5) Tomcat 실행
 CMD ["/bin/bash", "-c", "/usr/local/tomcat/bin/catalina.sh start && tail -f /dev/null"]
+
 
