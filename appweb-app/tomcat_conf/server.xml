@@ -181,6 +181,13 @@
 
   </Cluster>
 
+      <Membership className="org.apache.catalina.tribes.membership.McastService"
+            address="228.0.0.4"
+            port="45564"
+            frequency="500"
+            dropTime="3000"/>
+
+
       <!--For clustering, please take a look at documentation at:
           /docs/cluster-howto.html  (simple how to)
           /docs/config/cluster.html (reference documentation) -->
